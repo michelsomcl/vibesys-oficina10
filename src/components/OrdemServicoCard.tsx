@@ -1,10 +1,20 @@
-
-import { Settings, CheckCircle, Clock, AlertTriangle, Package, Eye, Pencil } from "lucide-react"
+import { Settings, CheckCircle, Clock, AlertTriangle, Package, Eye, Pencil, Trash2 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { OrdemServicoWithDetails } from "@/hooks/useOrdensServico"
+import { OrdemServicoWithDetails, useDeleteOrdemServico } from "@/hooks/useOrdensServico"
 import { format } from "date-fns"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface OrdemServicoCardProps {
   os: OrdemServicoWithDetails
@@ -13,6 +23,12 @@ interface OrdemServicoCardProps {
 }
 
 export const OrdemServicoCard = ({ os, onView, onEdit }: OrdemServicoCardProps) => {
+  const deleteOrdemServico = useDeleteOrdemServico()
+
+  const handleDelete = () => {
+    deleteOrdemServico.mutate(os.id)
+  }
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "Andamento":
@@ -99,6 +115,36 @@ export const OrdemServicoCard = ({ os, onView, onEdit }: OrdemServicoCardProps) 
               <Button variant="outline" size="sm" onClick={() => onEdit(os)}>
                 <Pencil className="w-4 h-4" />
               </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Tem certeza que deseja excluir a OS {os.numero}? Esta ação não pode ser desfeita.
+                      {os.orcamento && (
+                        <span className="block mt-2 text-sm">
+                          O orçamento vinculado voltará para o status "Pendente".
+                        </span>
+                      )}
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction 
+                      onClick={handleDelete}
+                      className="bg-red-600 hover:bg-red-700"
+                      disabled={deleteOrdemServico.isPending}
+                    >
+                      {deleteOrdemServico.isPending ? "Excluindo..." : "Excluir"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </div>
         </div>

@@ -101,3 +101,49 @@ export const useCreateOrdemServico = () => {
     },
   })
 }
+
+export const useDeleteOrdemServico = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      // Primeiro, buscar a OS para obter o orcamento_id
+      const { data: os, error: osError } = await supabase
+        .from("ordem_servico")
+        .select("orcamento_id")
+        .eq("id", id)
+        .single()
+
+      if (osError) throw osError
+
+      // Excluir a ordem de serviço
+      const { error: deleteError } = await supabase
+        .from("ordem_servico")
+        .delete()
+        .eq("id", id)
+
+      if (deleteError) throw deleteError
+
+      // Se existe um orçamento vinculado, atualizar seu status para "Pendente"
+      if (os.orcamento_id) {
+        const { error: updateError } = await supabase
+          .from("orcamentos")
+          .update({ status: "Pendente" })
+          .eq("id", os.orcamento_id)
+
+        if (updateError) throw updateError
+      }
+
+      return { deletedId: id, orcamentoId: os.orcamento_id }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ordens_servico"] })
+      queryClient.invalidateQueries({ queryKey: ["orcamentos"] })
+      toast.success("Ordem de serviço excluída com sucesso!")
+    },
+    onError: (error) => {
+      console.error("Erro ao excluir ordem de serviço:", error)
+      toast.error("Erro ao excluir ordem de serviço")
+    },
+  })
+}

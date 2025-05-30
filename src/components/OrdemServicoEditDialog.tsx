@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -137,6 +136,7 @@ export const OrdemServicoEditDialog = ({ ordemServico, isOpen, onClose }: OrdemS
   if (!ordemServico) return null
 
   const valorAPagar = ordemServico.valor_total - parseFloat(valorPago || "0")
+  const statusPagamentoCalculado = valorAPagar <= 0 ? "Pago" : "Pendente"
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -239,10 +239,13 @@ export const OrdemServicoEditDialog = ({ ordemServico, isOpen, onClose }: OrdemS
             <div>
               <Label>Status do Pagamento</Label>
               <Input 
-                value={valorAPagar <= 0 ? "Pago" : "Pendente"}
+                value={statusPagamentoCalculado}
                 disabled
-                className={valorAPagar <= 0 ? "text-green-600" : "text-red-600"}
+                className={statusPagamentoCalculado === "Pago" ? "text-green-600 font-medium" : "text-red-600 font-medium"}
               />
+              <p className="text-xs text-muted-foreground mt-1">
+                * Atualizado automaticamente baseado no valor pago
+              </p>
             </div>
           </div>
 
